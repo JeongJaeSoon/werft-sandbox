@@ -1,0 +1,11 @@
+name: sandbox-other
+
+on: workflow_dispatch
+
+permissions: {}
+
+jobs:
+  echo:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "sandbox-other ran"

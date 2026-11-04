@@ -1,0 +1,9 @@
+name: stackspec-ci
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "$GITHUB_BASE_REF $GITHUB_HEAD_REF"

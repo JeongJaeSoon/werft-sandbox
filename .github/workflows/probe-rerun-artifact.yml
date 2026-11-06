@@ -1,0 +1,62 @@
+name: probe-rerun-artifact
+# Measurement only: does an artifact uploaded by a failed attempt reach the next
+# attempt of the same run? Publishes nothing.
+on:
+  push:
+    branches: [probe/artifact-rerun-94s-1442]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Attempt ${{ github.run_attempt }} writes its record
+        run: |
+          mkdir -p out
+          echo "attempt=${{ github.run_attempt }} job=${{ github.job }}" >out/record.txt
+      - name: Upload record (always)
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: probe-attempt-${{ github.run_attempt }}
+          path: out/record.txt
+      - name: Attempt 2+, method A - download-artifact pattern in the same run
+        if: github.run_attempt > 1
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: probe-attempt-*
+          path: got-a
+          merge-multiple: false
+      - name: Attempt 2+, method B - download-artifact with run-id and token
+        if: github.run_attempt > 1
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: probe-attempt-1
+          run-id: ${{ github.run_id }}
+          github-token: ${{ github.token }}
+          path: got-b
+      - name: Attempt 2+, method C - gh api
+        if: github.run_attempt > 1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
+            --jq '.artifacts[] | "\(.name) id=\(.id) expired=\(.expired) created=\(.created_at)"'
+          id="$(gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
+            --jq '.artifacts[] | select(.name=="probe-attempt-1") | .id')"
+          mkdir -p got-c
+          gh api "repos/${{ github.repository }}/actions/artifacts/${id}/zip" >got-c/a.zip
+          unzip -o got-c/a.zip -d got-c
+      - name: Attempt 2+, show what arrived
+        if: github.run_attempt > 1
+        run: |
+          for d in got-a got-b got-c; do echo "== $d"; find "$d" -type f -exec sh -c 'echo "{}: $(cat "{}" 2>/dev/null | head -c 80)"' \; ; done
+      - name: Attempt 1 fails on purpose
+        if: github.run_attempt == 1
+        run: |
+          echo "failing on purpose"
+          exit 1

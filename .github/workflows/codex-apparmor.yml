@@ -1,0 +1,15 @@
+name: codex-apparmor
+
+on:
+  push:
+    branches: [research/codex-apparmor]
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash research/probe.sh

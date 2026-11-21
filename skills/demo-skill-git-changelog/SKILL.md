@@ -9,3 +9,4 @@ description: Summarize a branch's commits as a changelog entry.
 2. Write a short changelog entry with one bullet per change.
 3. Link each bullet to its pull request.
 4. Put breaking changes first.
+5. End with a one-line "Upgrade notes" section when anything needs action.

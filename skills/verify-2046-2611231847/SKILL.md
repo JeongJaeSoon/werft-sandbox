@@ -7,3 +7,4 @@ description: Test skill for verifying auto-sync on the demo.
 
 1. Read the task the user gives.
 2. Answer in one short paragraph.
+3. Keep the answer polite.

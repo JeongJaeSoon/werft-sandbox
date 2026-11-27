@@ -1,0 +1,9 @@
+name: verify-2343-echo
+on:
+  push:
+  pull_request:
+jobs:
+  echo:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo verify-2343
